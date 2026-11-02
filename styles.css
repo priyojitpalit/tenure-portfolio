@@ -299,3 +299,8 @@ details.tree-node[open] > summary:before{transform:rotate(90deg)}
 @media(prefers-reduced-motion:reduce){
  .folder-caret,.directory-arrow,.sidebar,.document-reader{transition:none}
 }
+
+@media(max-width:980px){
+ .sidebar.mobile-open{box-shadow:20px 0 50px #1a102a40}
+ #reader-expand{display:none}
+}
