@@ -10,51 +10,6 @@ const SECTIONS=[
  {file:"07-other.json",name:"Other Supporting Materials",short:"Letters & materials",lead:"Additional perspectives",desc:"Letters of support and other accompanying records."}
 ];
 const EXPECTED=[1,4,2,10,93,32,37,9];
-
-/* Short reading introductions and source-based starting points.
-   Every highlighted document is resolved against the actual Drive inventory. */
-const SECTION_GUIDES=[
- {intro:"The College's applicant guidance is included here for reference. The remaining sections contain the application and supporting materials.", picks:[
-  ["Applicant guidance","Best Practices for Applicants","Institutional instructions and review guidance."]]},
- {intro:"Begin with the application letter for an overview of the case, then consult the curriculum vitae and signed fact sheet for background and required information.", picks:[
-  ["Application letter","TENURE-2026-Application-Letter-with-Evidence","The application and its evidence appendix."],
-  ["Curriculum vitae","Curriculum Vitae — Priyojit Palit","Education, teaching, service, and professional record."],
-  ["Signed fact sheet","Signed Tenure Fact Sheet","Required candidate information."]]},
- {intro:"This section contains the pre-tenure evaluations from the division review committee and division chair.", picks:[
-  ["Committee review","REVIEW-PRETENURE-2024-Division-Committee","Pre-tenure committee evaluation."],
-  ["Chair review","REVIEW-PRETENURE-2024-Division-Chair","Pre-tenure chair evaluation."]]},
- {intro:"Annual goals, Faculty Activities Reports, and division-chair evaluations provide a year-by-year account of the appointment.", picks:[
-  ["Recent activities report","FAR-2025-2026","Faculty Activities Report, 2025–2026."],
-  ["Recent annual evaluation","REVIEW-ANNUAL-2025-2026","Division-chair review, 2025–2026."],
-  ["Earlier goals","Annual Statement of Goal 2022","Goals documented near the start of the appointment."]]},
- {intro:"The teaching philosophy provides the starting point. The materials below then document courses and syllabi, classroom observations, instructional resources, and student feedback.", picks:[
-  ["Teaching philosophy","Teaching Philosophy — Tenure 2026","Approach to teaching and learning."],
-  ["Course notes and materials","TEACH — Direct Links to Five Faculty-Developed","A guide to full course-note collections."],
-  ["Classroom observations","00 - Classroom Observations and Annual Review Guide","An entry point to observation records."]]},
- {intro:"The service philosophy and activity summaries introduce contributions to students, the division, and the College. Supporting correspondence and original documents follow.", picks:[
-  ["Service philosophy","Service Philosophy — Tenure 2026","Statement of service commitments."],
-  ["Service evidence map","00 — Service Activities — Guide","Guide to activities and supporting records."],
-  ["Student outcomes","SERVICE-2026-Computer-Science-Internships-Placements","Internship and placement documentation."]]},
- {intro:"Research and professional activity are presented together, with a philosophy statement, scholarly records, grant-related materials, and documentation of professional development.", picks:[
-  ["Scholarship philosophy","Scholarship and Professional Activity Philosophy","Overview of scholarly and professional work."],
-  ["Peer-reviewed publication","SCHOLAR-2024-AAIM-Peer-Reviewed-Publication","Documentation of a peer-reviewed publication."],
-  ["Professional activity","PROF-2022-2026-Professional-Development-Evidence-Map","A guide to professional-development records."]]},
- {intro:"Additional letters and materials offer perspectives from colleagues, professionals, graduates, and students.", picks:[
-  ["Faculty support letter","LOR-2026-Matthew-Barnes-Unsolicited","Letter of support from Matthew Barnes."],
-  ["Professional support letter","LOR-Support-Smita-Ghosh","Letter from a professional in the field."],
-  ["Graduate letter","LOR-Support-Dru","Letter from a recent graduate."]]}
-];
-function featuredFile(i,term){
- return (state.parts[i]?.files||[]).find(f=>f.title.toLowerCase().includes(term.toLowerCase()));
-}
-function featuredHtml(i){
- const cards=SECTION_GUIDES[i].picks.map(([name,term,detail])=>{
-  const file=featuredFile(i,term);if(!file)return "";
-  return '<button class="featured-document" type="button" data-open="'+esc(file.id)+'"><span class="featured-icon" aria-hidden="true">▤</span><span class="featured-copy"><strong>'+esc(name)+'</strong><small>'+esc(detail)+'</small></span><span class="featured-arrow" aria-hidden="true">↗</span></button>';
- }).filter(Boolean).join("");
- return cards?'<div class="featured-block"><div class="featured-label">Suggested starting points</div><div class="featured-documents">'+cards+'</div></div>':"";
-}
-
 const state={parts:[],files:[],page:"overview",query:"",view:"list",saved:new Set(),current:null,partial:false};
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -76,10 +31,9 @@ function preview(f){
   return "https://drive.google.com/file/d/"+id+"/preview";
 }
 function setPage(next){
-  if(state.current)closeReader();
   state.page=next;state.query="";$("#global-search").value="";
   history.replaceState(null,"","#"+(next==="overview"||next==="saved"?next:"section="+next));
-  render();window.scrollTo(0,0);
+  render();
 }
 function nav(){
   $("#section-nav").innerHTML='<button class="nav-item" data-nav="overview"><span class="nav-number">⌂</span><span class="nav-text">Portfolio overview</span></button>'+SECTIONS.map((s,i)=>'<button class="nav-item" data-nav="'+i+'"><span class="nav-number">'+num(i)+'</span><span class="nav-text">'+esc(s.short)+'</span><span class="nav-count">'+sectionCount(i)+'</span></button>').join("");
@@ -122,20 +76,10 @@ function groups(files){
  files.forEach(f=>{const key=(f.path||[])[1]||"Documents in this section";if(!m.has(key))m.set(key,[]);m.get(key).push(f)});
  return [...m.entries()].sort((a,b)=>ordered(a[0],b[0]));
 }
-function groupHtml(name,files,groupId=""){
- return '<details class="folder-group"'+(groupId?' id="'+esc(groupId)+'"':"")+'><summary class="folder-head"><span class="folder-title"><span class="folder-chevron" aria-hidden="true">›</span><span><strong>'+esc(name)+'</strong><small>'+((files.length&&files.every(archive))?"Archived source reports":"Click to view documents")+'</small></span></span><span class="folder-count">'+files.length+' files</span></summary><div class="doc-list">'+[...files].sort((a,b)=>ordered(a.title,b.title)).map(documentRow).join("")+'</div></details>';
+function groupHtml(name,files){
+ return '<details class="folder-group"><summary class="folder-head"><span class="folder-title"><span class="folder-chevron" aria-hidden="true">›</span><span><strong>'+esc(name)+'</strong><small>'+((files.length&&files.every(archive))?"Archived source reports":"Click to view documents")+'</small></span></span><span class="folder-count">'+files.length+' files</span></summary><div class="doc-list">'+[...files].sort((a,b)=>ordered(a.title,b.title)).map(documentRow).join("")+'</div></details>';
 }
-function groupList(files,sectionIndex=null){
- return groups(files).map(([name,items],n)=>groupHtml(name,items,sectionIndex===null?"":"evidence-"+sectionIndex+"-"+n)).join("");
-}
-function topicLinks(i,files){
- const topicGroups=groups(files);
- if(topicGroups.length<2)return "";
- return '<nav class="topic-map" aria-label="Jump to evidence folders"><span>Jump to</span><div>'+topicGroups.map(([name,items],n)=>{
-  const short=name.replace(/^\s*\d+\.\s*/,"").replace(/\s*\([^)]*\)/g,"").trim();
-  return '<button type="button" data-jump-folder="evidence-'+i+'-'+n+'">'+esc(short)+'</button>';
- }).join("")+'</div></nav>';
-}
+function groupList(files){return groups(files).map(([name,items])=>groupHtml(name,items)).join("")}
 function treeHtml(i){
  const s=state.parts[i],root={name:SECTIONS[i].name,kids:new Map(),files:[]};
  function node(parts){let here=root;parts.forEach(p=>{if(!here.kids.has(p))here.kids.set(p,{name:p,kids:new Map(),files:[]});here=here.kids.get(p)});return here}
@@ -148,24 +92,17 @@ function treeHtml(i){
  return '<div class="tree-view">'+html(root,true)+'</div>';
 }
 function sectionHtml(i){
- const item=SECTIONS[i],files=state.parts[i]?.files||[];
- const prior=i>0?i-1:null,next=i<SECTIONS.length-1?i+1:null;
- return '<div class="container chapter-page"><div class="content-head"><div><span class="eyebrow">SECTION '+num(i)+' · '+esc(item.lead)+'</span><h2>'+esc(item.name)+'</h2><p>'+esc(SECTION_GUIDES[i].intro)+'</p></div><div class="section-meta"><strong>'+files.length+'</strong><span>documents</span></div></div>'+
- featuredHtml(i)+
- '<div class="evidence-heading" id="evidence-start"><div><span class="eyebrow">COMPLETE DOCUMENT COLLECTION</span><h3>Supporting materials</h3><p>All documents in this section remain available below.</p></div></div>'+
- (state.view==="list"?topicLinks(i,files):"")+
- '<div class="section-tools"><span class="small-detail">Select a folder to view its documents.</span><div class="tool-buttons"><button class="toggle-button '+(state.view==="list"?"active":"")+'" data-view="list">Grouped documents</button><button class="toggle-button '+(state.view==="tree"?"active":"")+'" data-view="tree">Full folder tree</button></div></div>'+
- (state.view==="tree"?treeHtml(i):groupList(files,i))+
- (!files.length?'<div class="empty-state"><h3>No documents in this section</h3></div>':"")+
- '<nav class="chapter-next" aria-label="Section navigation">'+
- (prior!==null?'<button data-nav="'+prior+'"><span>← Previous section</span><strong>'+esc(SECTIONS[prior].name)+'</strong></button>':"<span></span>")+
- (next!==null?'<button class="chapter-next-forward" data-nav="'+next+'"><span>Next section →</span><strong>'+esc(SECTIONS[next].name)+'</strong></button>':"<span></span>")+'</nav></div>';
+ const s=SECTIONS[i],p=state.parts[i],files=p?.files||[];
+ return '<div class="container"><div class="content-head"><div><span class="eyebrow">SECTION '+num(i)+' · '+esc(s.lead)+'</span><h2>'+esc(s.name)+'</h2><p>'+esc(s.desc)+'</p></div><div class="section-meta"><strong>'+files.length+'</strong><span>documents</span></div></div>'+
+ '<div class="section-tools"><span class="small-detail">Choose a document to read; switch to the folder tree to see the full structure.</span><div class="tool-buttons"><button class="toggle-button '+(state.view==="list"?"active":"")+'" data-view="list">Document list</button><button class="toggle-button '+(state.view==="tree"?"active":"")+'" data-view="tree">Folder tree</button></div></div>'+
+ (state.view==="tree"?treeHtml(i):groupList(files))+
+ (files.length?"":'<div class="empty-state"><h3>No documents in this section</h3><p>The source folder may be reserved for future materials.</p></div>')+'</div>';
 }
 function searchHtml(query){
  const tokens=query.toLowerCase().trim().split(/\s+/).filter(Boolean);
  const files=state.files.filter(f=>tokens.every(t=>(f.title+" "+(f.path||[]).join(" ")).toLowerCase().includes(t)));
  return '<div class="container"><div class="search-results-heading"><div><span class="eyebrow">PORTFOLIO SEARCH</span><h2>Search results</h2><span class="result-meta">'+files.length+' documents matching “'+esc(query)+'”</span></div><button class="button secondary" data-clear-search>Clear search</button></div>'+
- (files.length?'<div class="search-document-list">'+files.map(documentRow).join("")+'</div>':'<div class="empty-state"><h3>No matching records</h3><p>Try a course code, year, author, or subject.</p></div>')+'</div>';
+ (files.length?groupList(files):'<div class="empty-state"><h3>No matching records</h3><p>Try a course code, year, author, or subject.</p></div>')+'</div>';
 }
 function savedHtml(){
  const files=state.files.filter(f=>state.saved.has(f.id));
@@ -179,23 +116,6 @@ function render(){
  $("#top-breadcrumb").innerHTML='Portfolio <span>/</span> '+esc(name);
  $(".sidebar").classList.remove("mobile-open");$("#menu-toggle").setAttribute("aria-expanded","false");
 }
-function readerSequence(){
- if(!state.current)return [];
- return state.parts[state.current.section]?.files||[];
-}
-function updateReaderControls(){
- const sequence=readerSequence();
- const idx=sequence.findIndex(f=>f.id===state.current?.id);
- $("#reader-prev").disabled=idx<=0;
- $("#reader-next").disabled=idx<0||idx>=sequence.length-1;
- $("#reader-progress").textContent=idx<0?"":(idx+1)+" of "+sequence.length;
-}
-function moveReader(delta){
- const sequence=readerSequence();
- const current=sequence.findIndex(f=>f.id===state.current?.id);
- const next=sequence[current+delta];
- if(next)openReader(next);
-}
 function openReader(file,restore=false){
  if(!file)return;
  state.current=file;
@@ -205,17 +125,15 @@ function openReader(file,restore=false){
  $("#reader-external").href=original(file);
  $("#reader-frame").src=preview(file);
  $("#reader-save").textContent=state.saved.has(file.id)?"★ Saved":"☆ Save";
- updateReaderControls();
- $("#document-reader").scrollTop=0;
  $("#document-reader").classList.add("open");$("#document-reader").setAttribute("aria-hidden","false");
  $("#reader-scrim").hidden=false;document.body.style.overflow="hidden";
  if(!restore)history.replaceState(null,"","#document="+file.id);
  $("#reader-close").focus();
 }
 function closeReader(){
- $("#document-reader").classList.remove("open");
+ $("#document-reader").classList.remove("open","expanded");
  $("#document-reader").setAttribute("aria-hidden","true");
- $("#reader-scrim").hidden=true;
+ $("#reader-expand").textContent="Expand view";$("#reader-scrim").hidden=true;
  $("#reader-frame").src="about:blank";document.body.style.overflow="";
  state.current=null;
  history.replaceState(null,"","#"+(state.page==="overview"||state.page==="saved"?state.page:"section="+state.page));
@@ -248,17 +166,17 @@ document.addEventListener("click",e=>{
  const term=e.target.closest("[data-open-term]");if(term){openReader(findTerm(term.dataset.openTerm));return}
  const doc=e.target.closest("[data-open]");if(doc){openReader(state.files.find(f=>f.id===doc.dataset.open));return}
  const view=e.target.closest("[data-view]");if(view){state.view=view.dataset.view;render();return}
- const folder=e.target.closest("[data-jump-folder]");if(folder){const node=document.getElementById(folder.dataset.jumpFolder);if(node){node.open=true;node.scrollIntoView({behavior:"smooth",block:"start"})}return}
- if(e.target.closest("[data-clear-search]")){$("#global-search").value="";state.query="";render();return}
- if($(".sidebar").classList.contains("mobile-open")&&!e.target.closest("#sidebar, #menu-toggle")){$(".sidebar").classList.remove("mobile-open");$("#menu-toggle").setAttribute("aria-expanded","false")}
+ if(e.target.closest("[data-clear-search]")){$("#global-search").value="";state.query="";render()}
 });
 $("#global-search").addEventListener("input",e=>{state.query=e.target.value;render()});
 $("#global-search").addEventListener("keydown",e=>{if(e.key==="Escape"){e.target.value="";state.query="";render()}});
 $("#reader-close").addEventListener("click",closeReader);
 $("#reader-scrim").addEventListener("click",closeReader);
 $("#reader-save").addEventListener("click",saveCurrent);
-$("#reader-prev").addEventListener("click",()=>moveReader(-1));
-$("#reader-next").addEventListener("click",()=>moveReader(1));
+$("#reader-expand").addEventListener("click",()=>{
+ const expanded=$("#document-reader").classList.toggle("expanded");
+ $("#reader-expand").textContent=expanded?"Restore view":"Expand view";
+});
 $("#bookmarks-link").addEventListener("click",()=>setPage("saved"));
 $("#menu-toggle").addEventListener("click",()=>{
  const expanded=$("#sidebar").classList.toggle("mobile-open");
@@ -266,8 +184,6 @@ $("#menu-toggle").addEventListener("click",()=>{
 });
 document.addEventListener("keydown",e=>{
  if(e.key==="Escape"&&state.current){closeReader();return}
- if(state.current&&(e.key==="ArrowLeft"||e.key==="ArrowRight")&&!["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){moveReader(e.key==="ArrowLeft"?-1:1);return}
- if(e.key==="Escape"&&$(".sidebar").classList.contains("mobile-open")){$(".sidebar").classList.remove("mobile-open");$("#menu-toggle").setAttribute("aria-expanded","false");return}
  if(e.key==="/"&&!state.current&&document.activeElement!==$("#global-search")&&!["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){
   e.preventDefault();$("#global-search").focus();
  }
