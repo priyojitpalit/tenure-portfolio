@@ -177,7 +177,8 @@ document.addEventListener("click",e=>{
  const term=e.target.closest("[data-open-term]");if(term){openReader(findTerm(term.dataset.openTerm));return}
  const doc=e.target.closest("[data-open]");if(doc){openReader(state.files.find(f=>f.id===doc.dataset.open));return}
  const action=e.target.closest("[data-folder-action]");if(action){document.querySelectorAll("#main-content details.folder-node").forEach(folder=>folder.open=action.dataset.folderAction==="expand");return}
- if(e.target.closest("[data-clear-search]")){$("#global-search").value="";state.query="";render()}
+ if(e.target.closest("[data-clear-search]")){$("#global-search").value="";state.query="";render();return}
+ if($(".sidebar").classList.contains("mobile-open")&&!e.target.closest("#sidebar, #menu-toggle")){$(".sidebar").classList.remove("mobile-open");$("#menu-toggle").setAttribute("aria-expanded","false")}
 });
 $("#global-search").addEventListener("input",e=>{state.query=e.target.value;render()});
 $("#global-search").addEventListener("keydown",e=>{if(e.key==="Escape"){e.target.value="";state.query="";render()}});
@@ -195,6 +196,7 @@ $("#menu-toggle").addEventListener("click",()=>{
 });
 document.addEventListener("keydown",e=>{
  if(e.key==="Escape"&&state.current){closeReader();return}
+ if(e.key==="Escape"&&$(".sidebar").classList.contains("mobile-open")){$(".sidebar").classList.remove("mobile-open");$("#menu-toggle").setAttribute("aria-expanded","false");$("#menu-toggle").focus();return}
  if(e.key==="/"&&!state.current&&document.activeElement!==$("#global-search")&&!["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){
   e.preventDefault();$("#global-search").focus();
  }
