@@ -24,6 +24,8 @@ jobs:
           test -s index.html
           test -s data/04-teaching.json
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v4
         with:
           path: .
