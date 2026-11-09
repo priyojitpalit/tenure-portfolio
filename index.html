@@ -55,6 +55,19 @@
     <div class="preview-note">Read the original below. Google Drive may request your institutional sign-in. If embedding is blocked, use “Open original in Drive.”</div>
     <div class="reader-frame-wrap"><iframe id="reader-frame" title="Document preview" loading="lazy" referrerpolicy="no-referrer" allow="fullscreen"></iframe></div>
   </aside>
+  <!-- Analytics stays disabled until the Cloudflare Web Analytics site token is provided.
+       The token is a public site identifier, not an API credential. -->
+  <script>
+    (() => {
+      const cloudflareSiteToken = ""; // Set to the token from Cloudflare Web Analytics > Manage site.
+      if (!cloudflareSiteToken) return;
+      const script = document.createElement("script");
+      script.type = "module";
+      script.src = "https://static.cloudflareinsights.com/beacon.min.js";
+      script.setAttribute("data-cf-beacon", JSON.stringify({ token: cloudflareSiteToken }));
+      document.head.appendChild(script);
+    })();
+  </script>
   <script src="./app.js?v=20261102-original-restored" defer></script>
 </body>
 </html>
